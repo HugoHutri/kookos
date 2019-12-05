@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
         if(fread(&c, sizeof c, 1, fp) != 1) break;
 
         for(int i = 0; i < count; i++)
-            fwrite(&c, 1, 1, stdout);
+            printf("%c", c);
     }
     fclose(fp);
     return(0);
