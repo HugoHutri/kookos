@@ -14,8 +14,8 @@ int main(int argc, char *argv[]) {
         char c = fgetc(fp);
 
         if(feof(fp)) {
-            fwrite(&prev, 1, 1, stdout);
             fwrite(&count, sizeof count, 1, stdout);
+            fwrite(&prev, 1, 1, stdout);
             break;
         }
         
@@ -26,8 +26,8 @@ int main(int argc, char *argv[]) {
         }
 
         else if(count != 0) {
-            fwrite(&prev, 1, 1, stdout);
             fwrite(&count, sizeof count, 1, stdout);
+            fwrite(&prev, 1, 1, stdout);
         }
         count = 1;
         prev = c;

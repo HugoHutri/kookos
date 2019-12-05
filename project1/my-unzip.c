@@ -7,10 +7,10 @@ int main(int argc, char *argv[]) {
     FILE *fp = fopen(argv[1],"r");
 
     while(1) {
-        char c;
-        if(fread(&c, sizeof c, 1, fp) != 1) break;
         int count;
         if(fread(&count, sizeof count, 1, fp) != 1) break;
+        char c;
+        if(fread(&c, sizeof c, 1, fp) != 1) break;
 
         for(int i = 0; i < count; i++)
             fwrite(&c, 1, 1, stdout);
