@@ -8,11 +8,24 @@
 #define YELLOW "\033[1;33m"
 #define RESET "\033[0m"
 
+/* Error types */
+#define ERROR_DEFAULT "An error has occured\n"
+#define ERROR_UNKNOWN_COMMAND "Error: Unknown command\n"
+#define ERROR_TOO_MANY_ARGS "Error: Too many arguments\n"
+#define ERROR_TOO_FEW_ARGS "Error: Too few arguments\n"
+#define ERROR_INPUT_FILE "An Error with input file\n"
+#define ERROR_MEMORY "Error: Memory allocation failed"
+
+
 /* Linked list for paths */
 typedef struct PATH {
     char* address;
     struct PATH *next;
 } Path;
+
+void shell_error(char* error_message) {
+    write(STDERR_FILENO, error_message, strlen(error_message));
+}
 
 /* Read a line from user */
 char* command_read(FILE* file) {
@@ -52,7 +65,7 @@ int command_launch(char** args, Path** path) {
             execv(addr, args);
             exit(1);
         } else if (childID < 0) {
-            perror("wish");
+            shell_error(ERROR_UNKNOWN_COMMAND);
         } else {
             /* Parent */
             do {
@@ -62,7 +75,7 @@ int command_launch(char** args, Path** path) {
         }
         return 1;
     }
-    printf("Unknown command\n");
+    shell_error(ERROR_UNKNOWN_COMMAND);
     return 1;
 
 }
@@ -76,8 +89,7 @@ char** command_parse(char* line) {
 
     /* Malloc memory for the first argument */
     if(!(args = malloc(buffer_size * sizeof(char*)))) {
-        perror("Error");
-        exit(1);
+        shell_error(ERROR_MEMORY);
     }
     arg = strtok(line, " \t\r\n\a");
     while (arg) {
@@ -89,8 +101,7 @@ char** command_parse(char* line) {
         if(pos >= buffer_size) {
             buffer_size += 64;
             if(!(args = realloc(args, buffer_size * sizeof(char*)))) {
-                perror("Error");
-                exit(1);
+                shell_error(ERROR_MEMORY);
             }
         }
         arg = strtok(NULL, " \t\r\n\a");
@@ -102,7 +113,7 @@ char** command_parse(char* line) {
 
 /* Buildin command for cd */
 int cmd_cd(char** args) {
-    if(!args[1]) printf("Missing argument!\n");
+    if(!args[1]) shell_error(ERROR_TOO_FEW_ARGS);
     else chdir(args[1]);
     return 1;
 }
@@ -147,15 +158,13 @@ int cmd_path(char** args, Path **first) {
         pos++;
         /* Malloc memory for the string */
         if(!(addr = (char*) malloc(sizeof(args[pos])))) {
-            perror("Error");
-            exit(1);
+            shell_error(ERROR_MEMORY);
         }
         if(args[pos] == NULL) break;
 
         /* Malloc memory for the path node */
         if(!(new = (Path*) malloc(sizeof(Path)))) {
-            perror("Error");
-            exit(1);
+            shell_error(ERROR_MEMORY);
         }
 
         /* Assign values */
@@ -181,10 +190,16 @@ int cmd_path(char** args, Path **first) {
     return 1;
 }
 
+int cmd_exit(char** args) {
+    if(args[1] == NULL) return 0;
+    shell_error(ERROR_TOO_MANY_ARGS);
+    return 1;
+}
+
 /* Execute the command */
 int command_execute(char** args, Path** path) {
     if(args[0] == NULL)             return 1;
-    if(!strcmp(args[0], "exit"))    return 0;
+    if(!strcmp(args[0], "exit"))    return cmd_exit(args);
     if(!strcmp(args[0], "cd"))      return cmd_cd(args);
     if(!strcmp(args[0], "path"))    return cmd_path(args, path);
     return command_launch(args, path);
@@ -197,13 +212,11 @@ Path* init_path() {
 
     /* Malloc memory for the string */
     if(!(addr = (char*) malloc(8*sizeof(char)))) {
-        perror("Error");
-        exit(1);
+        shell_error(ERROR_MEMORY);
     }
     /* Malloc memory for the path node */
     if(!(new = (Path*) malloc(sizeof(Path)))) {
-        perror("Error");
-        exit(1);
+        shell_error(ERROR_MEMORY);
     }
 
     /* Assign values */
@@ -244,17 +257,17 @@ void command_loop(FILE* input) {
     
 }
 
-/* Main funktion */
+/* Main function */
 int main(int argc, char** argv) {
     FILE* input = NULL;
     if(argc > 2) {
-        printf("Too many arguments!\n");
+        shell_error(ERROR_INPUT_FILE);
         return 0;
     }
-    if(argc == 2)
-        input = fopen(argv[1],"r");
+    if(argc == 2) input = fopen(argv[1],"r");
 
     command_loop(input);
+
     if(argc == 2) fclose(input);
     return 0;
 }
