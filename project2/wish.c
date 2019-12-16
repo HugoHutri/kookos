@@ -25,6 +25,8 @@ typedef struct PATH {
 
 void shell_error(char* error_message) {
     write(STDERR_FILENO, error_message, strlen(error_message));
+    /* Exit if there is an error with input file */
+    if(!strcmp(error_message,ERROR_INPUT_FILE)) exit(1);
 }
 
 /* Read a line from user */
@@ -264,7 +266,10 @@ int main(int argc, char** argv) {
         shell_error(ERROR_INPUT_FILE);
         return 0;
     }
-    if(argc == 2) input = fopen(argv[1],"r");
+    if(argc == 2) {
+        input = fopen(argv[1],"r");
+        if(!input) shell_error(ERROR_INPUT_FILE);
+    }
 
     command_loop(input);
 
