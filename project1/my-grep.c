@@ -5,8 +5,8 @@
 int main(int argc, char* argv[]) {
 
     if (argc <= 1) {
-        perror("")
-        exit(1)
+        perror("Ei argumentteja.");
+        exit(1);
     }
     for (int i = 2; i < argc; i++) {
         FILE *tiedosto;
