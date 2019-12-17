@@ -16,6 +16,12 @@
 #define ERROR_INPUT_FILE "An Error with input file\n"
 #define ERROR_MEMORY "Error: Memory allocation failed"
 
+/* References
+https://stackoverflow.com/questions/19099663/how-to-correctly-use-fork-exec-wait
+https://brennan.io/2015/01/16/write-a-shell-in-c/
+https://support.sas.com/documentation/onlinedoc/sasc/doc/lr2/waitpid.htm
+*/
+
 
 /* Linked list for paths */
 typedef struct PATH {
@@ -23,6 +29,7 @@ typedef struct PATH {
     struct PATH *next;
 } Path;
 
+/* Handle error messages */
 void shell_error(char* error_message) {
     write(STDERR_FILENO, error_message, strlen(error_message));
     /* Exit if there is an error with input file */
@@ -40,7 +47,6 @@ char* command_read(FILE* file) {
 /* Launch the command with execv */
 int command_launch(char** args, Path** path) {
     pid_t childID;
-    pid_t endID;
     int status;
     char addr[100];
 
@@ -71,7 +77,7 @@ int command_launch(char** args, Path** path) {
         } else {
             /* Parent */
             do {
-                endID = waitpid(childID, &status, WUNTRACED);
+                waitpid(childID, &status, WUNTRACED);
                 if(WIFSTOPPED(status)) return 1;
             } while (!WIFEXITED(status) && !WIFSIGNALED(status));
         }
